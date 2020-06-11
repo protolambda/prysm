@@ -265,7 +265,8 @@ func BenchmarkFastsszSerialize(b *testing.B) {
 	b.ResetTimer()
 	res := byte(0)
 	for i := 0; i < b.N; i++ {
-		_, err := state.MarshalSSZTo(buf)
+		// buf is the same slice content, but slice header changed to modify to new length
+		buf, err := state.MarshalSSZTo(buf)
 		if err != nil {
 			b.Fatal(err)
 		}
