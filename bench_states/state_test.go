@@ -56,6 +56,10 @@ type MockBeaconState struct {
 	FinalizedCheckpoint         beacon.Checkpoint
 }
 
+// Go-ssz uses fast-ssz for whitelisted types. Instead, make go-ssz do its own thing, by wrapping the type
+type GosszState *pbp2p.BeaconState
+
+
 //------------------------
 
 func loadStateBytes() []byte {
@@ -89,15 +93,15 @@ func loadFastSszState(dat []byte) (*pbp2p.BeaconState, error) {
 }
 
 func loadPrysmProtobufState(dat []byte) (*pbp2p.BeaconState, error) {
-	st := &pbp2p.BeaconState{}
+	var st pbp2p.BeaconState
 	err := st.UnmarshalSSZ(dat)
-	return st, err
+	return &st, err
 }
 
-func loadGoSSZState(dat []byte) (*pbp2p.BeaconState, error) {
-	st := &pbp2p.BeaconState{}
+func loadGoSSZState(dat []byte) (GosszState, error) {
+	var st pbp2p.BeaconState
 	err := gossz.Unmarshal(dat, &st)
-	return st, err
+	return &st, err
 }
 
 //func BenchmarkZtypHTR(b *testing.B) {
