@@ -81,7 +81,9 @@ require (
 	github.com/prestonvanloon/go-recaptcha v0.0.0-20190217191114-0834cef6e8bd
 	github.com/prometheus/client_golang v1.6.0
 	github.com/prometheus/tsdb v0.10.0 // indirect
+	github.com/protolambda/zrnt v0.12.1
 	github.com/protolambda/zssz v0.1.4
+	github.com/protolambda/ztyp v0.0.1
 	github.com/prysmaticlabs/ethereumapis v0.0.0-20200608211251-7dafd77461b5
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20200322041314-62c2aee71669
 	github.com/prysmaticlabs/go-ssz v0.0.0-20200605034351-b6a925e519d0
@@ -121,3 +123,6 @@ require (
 replace github.com/ethereum/go-ethereum => github.com/prysmaticlabs/bazel-go-ethereum v0.0.0-20200530091827-df74fa9e9621
 
 replace github.com/json-iterator/go => github.com/prestonvanloon/go v1.1.7-0.20190722034630-4f2e55fcf87b
+
+replace github.com/protolambda/zssz => ../zssz
+replace github.com/protolambda/zrnt => ../zrnt
