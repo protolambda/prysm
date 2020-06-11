@@ -498,11 +498,13 @@ func BenchmarkProtobufDeserialize(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	var state pbp2p.BeaconState
 	b.ReportAllocs()
 	b.ResetTimer()
 	res := uint64(0)
 	for i := 0; i < b.N; i++ {
+		// Protobuf cannot re-use an existing beacon state struct,
+		// it would append the validators to the old registry.
+		var state pbp2p.BeaconState
 		err := state.Unmarshal(protobufDat)
 		if err != nil {
 			b.Fatal(err)
