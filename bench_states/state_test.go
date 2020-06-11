@@ -15,6 +15,52 @@ import (
 	"testing"
 )
 
+// What the speed would be if validator structs were a single byte array.
+// All those write calls for small fields hurt performance.
+// Not like a real beacon state
+
+type MockValidatorRegistry [][121]byte  // each validator is 121 bytes
+
+func (_ *MockValidatorRegistry) Limit() uint64 {
+	return beacon.VALIDATOR_REGISTRY_LIMIT
+}
+
+var MockBeaconStateSSZ = zssz.GetSSZ((*MockBeaconState)(nil))
+
+type MockBeaconState struct {
+	// Versioning
+	GenesisTime           beacon.Timestamp
+	GenesisValidatorsRoot beacon.Root
+	Slot                  beacon.Slot
+	Fork                  beacon.Fork
+	// History
+	LatestBlockHeader beacon.BeaconBlockHeader
+	BlockRoots        [beacon.SLOTS_PER_HISTORICAL_ROOT]beacon.Root
+	StateRoots        [beacon.SLOTS_PER_HISTORICAL_ROOT]beacon.Root
+	HistoricalRoots   beacon.HistoricalRoots
+	// Eth1
+	Eth1Data      beacon.Eth1Data
+	Eth1DataVotes beacon.Eth1DataVotes
+	DepositIndex  beacon.DepositIndex
+	// Registry
+	Validators MockValidatorRegistry
+	Balances   beacon.Balances
+	// Randomness
+	RandaoMixes [beacon.EPOCHS_PER_HISTORICAL_VECTOR]beacon.Root
+	// Slashings
+	Slashings [beacon.EPOCHS_PER_SLASHINGS_VECTOR]beacon.Gwei
+	// Attestations
+	PreviousEpochAttestations beacon.PendingAttestations
+	CurrentEpochAttestations  beacon.PendingAttestations
+	// Finality
+	JustificationBits           beacon.JustificationBits
+	PreviousJustifiedCheckpoint beacon.Checkpoint
+	CurrentJustifiedCheckpoint  beacon.Checkpoint
+	FinalizedCheckpoint         beacon.Checkpoint
+}
+
+//------------------------
+
 func loadStateBytes() []byte {
 	dat, err := ioutil.ReadFile("bench_state.ssz")
 	if err != nil {
@@ -30,6 +76,12 @@ func loadZtypState(dat []byte) (*beacon.BeaconStateView, error) {
 func loadZsszState(dat []byte) (*beacon.BeaconState, error) {
 	var state beacon.BeaconState
 	err := zssz.Decode(bytes.NewReader(dat), uint64(len(dat)), &state, beacon.BeaconStateSSZ)
+	return &state, err
+}
+
+func loadMockZsszState(dat []byte) (*MockBeaconState, error) {
+	var state MockBeaconState
+	err := zssz.Decode(bytes.NewReader(dat), uint64(len(dat)), &state, MockBeaconStateSSZ)
 	return &state, err
 }
 
@@ -173,6 +225,30 @@ func BenchmarkZsszSerialize(b *testing.B) {
 		}
 		res += w.Out[0]
 		w.N = 0
+		w.Out = w.Out[:0]
+	}
+	b.Logf("res: %d, N: %d", res, b.N)
+}
+
+func BenchmarkMockZsszSerialize(b *testing.B) {
+	dat := loadStateBytes()
+	state, err := loadMockZsszState(dat)
+	if err != nil {
+		b.Fatal(err)
+	}
+	// More comparable with direct array access, and ZSSZ is fast enough that it matters.
+	w := &PreAllocatedWriter{Out: make([]byte, 0, len(dat)), N: 0}
+	b.ReportAllocs()
+	b.ResetTimer()
+	res := byte(0)
+	for i := 0; i < b.N; i++ {
+		_, err := zssz.Encode(w, state, MockBeaconStateSSZ)
+		if err != nil {
+			b.Fatal(err)
+		}
+		res += w.Out[0]
+		w.N = 0
+		w.Out = w.Out[:0]
 	}
 	b.Logf("res: %d, N: %d", res, b.N)
 }
@@ -184,7 +260,7 @@ func BenchmarkFastsszSerialize(b *testing.B) {
 		b.Fatal(err)
 	}
 	// FastSSZ does not support readers or writers at this time.
-	buf := make([]byte, len(dat), len(dat))
+	buf := make([]byte, 0, len(dat))
 	b.ReportAllocs()
 	b.ResetTimer()
 	res := byte(0)
@@ -194,6 +270,7 @@ func BenchmarkFastsszSerialize(b *testing.B) {
 			b.Fatal(err)
 		}
 		res += buf[0]
+		buf = buf[:0]
 	}
 	b.Logf("res: %d, N: %d", res, b.N)
 }
