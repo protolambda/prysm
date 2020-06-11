@@ -225,7 +225,6 @@ func BenchmarkZsszSerialize(b *testing.B) {
 		}
 		res += w.Out[0]
 		w.N = 0
-		w.Out = w.Out[:0]
 	}
 	b.Logf("res: %d, N: %d", res, b.N)
 }
