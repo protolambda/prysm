@@ -2,14 +2,11 @@ package bench_states
 
 import (
 	"bytes"
-	"context"
 	"encoding/gob"
 	"github.com/protolambda/zrnt/eth2/beacon"
 	"github.com/protolambda/zrnt/eth2/util/hashing"
 	"github.com/protolambda/zssz"
-	"github.com/protolambda/ztyp/tree"
 	gossz "github.com/prysmaticlabs/go-ssz"
-	prysmstate "github.com/prysmaticlabs/prysm/beacon-chain/state"
 	pbp2p "github.com/prysmaticlabs/prysm/proto/beacon/p2p/v1"
 	"io/ioutil"
 	"testing"
@@ -103,21 +100,21 @@ func loadGoSSZState(dat []byte) (*pbp2p.BeaconState, error) {
 	return st, err
 }
 
-func BenchmarkZtypHTR(b *testing.B) {
-	stateTree, err := loadZtypState(loadStateBytes())
-	if err != nil {
-		b.Fatal(err)
-	}
-	hFn := tree.GetHashFn()
-	b.ReportAllocs()
-	b.ResetTimer()
-	res := byte(0)
-	for i := 0; i < b.N; i++ {
-		root := stateTree.HashTreeRoot(hFn)
-		res += root[0]
-	}
-	b.Logf("res: %d, N: %d", res, b.N)
-}
+//func BenchmarkZtypHTR(b *testing.B) {
+//	stateTree, err := loadZtypState(loadStateBytes())
+//	if err != nil {
+//		b.Fatal(err)
+//	}
+//	hFn := tree.GetHashFn()
+//	b.ReportAllocs()
+//	b.ResetTimer()
+//	res := byte(0)
+//	for i := 0; i < b.N; i++ {
+//		root := stateTree.HashTreeRoot(hFn)
+//		res += root[0]
+//	}
+//	b.Logf("res: %d, N: %d", res, b.N)
+//}
 
 func BenchmarkZsszHTR(b *testing.B) {
 	state, err := loadZsszState(loadStateBytes())
@@ -135,28 +132,28 @@ func BenchmarkZsszHTR(b *testing.B) {
 	b.Logf("res: %d, N: %d", res, b.N)
 }
 
-func BenchmarkPrysmHTR(b *testing.B) {
-	state, err := loadPrysmProtobufState(loadStateBytes())
-	if err != nil {
-		b.Fatal(err)
-	}
-	treeState, err := prysmstate.InitializeFromProtoUnsafe(state)
-	if err != nil {
-		b.Fatal(err)
-	}
-	ctx := context.Background()
-	b.ReportAllocs()
-	b.ResetTimer()
-	res := byte(0)
-	for i := 0; i < b.N; i++ {
-		root, err := treeState.HashTreeRoot(ctx)
-		if err != nil {
-			panic(err)
-		}
-		res += root[0]
-	}
-	b.Logf("res: %d, N: %d", res, b.N)
-}
+//func BenchmarkPrysmHTR(b *testing.B) {
+//	state, err := loadPrysmProtobufState(loadStateBytes())
+//	if err != nil {
+//		b.Fatal(err)
+//	}
+//	treeState, err := prysmstate.InitializeFromProtoUnsafe(state)
+//	if err != nil {
+//		b.Fatal(err)
+//	}
+//	ctx := context.Background()
+//	b.ReportAllocs()
+//	b.ResetTimer()
+//	res := byte(0)
+//	for i := 0; i < b.N; i++ {
+//		root, err := treeState.HashTreeRoot(ctx)
+//		if err != nil {
+//			panic(err)
+//		}
+//		res += root[0]
+//	}
+//	b.Logf("res: %d, N: %d", res, b.N)
+//}
 
 func BenchmarkGosszHTR(b *testing.B) {
 	state, err := loadPrysmProtobufState(loadStateBytes())
@@ -236,7 +233,7 @@ func BenchmarkMockZsszSerialize(b *testing.B) {
 		b.Fatal(err)
 	}
 	// More comparable with direct array access, and ZSSZ is fast enough that it matters.
-	w := &PreAllocatedWriter{Out: make([]byte, 0, len(dat)), N: 0}
+	w := &PreAllocatedWriter{Out: make([]byte, len(dat), len(dat)), N: 0}
 	b.ReportAllocs()
 	b.ResetTimer()
 	res := byte(0)
@@ -274,24 +271,24 @@ func BenchmarkFastsszSerialize(b *testing.B) {
 	b.Logf("res: %d, N: %d", res, b.N)
 }
 
-//func BenchmarkGosszSerialize(b *testing.B) {
-//	dat := loadStateBytes()
-//	state, err := loadGoSSZState(dat)
-//	if err != nil {
-//		b.Fatal(err)
-//	}
-//	b.ReportAllocs()
-//	b.ResetTimer()
-//	res := byte(0)
-//	for i := 0; i < b.N; i++ {
-//		out, err := gossz.Marshal(state)
-//		if err != nil {
-//			b.Fatal(err)
-//		}
-//		res += out[0]
-//	}
-//	b.Logf("res: %d, N: %d", res, b.N)
-//}
+func BenchmarkGosszSerialize(b *testing.B) {
+	dat := loadStateBytes()
+	state, err := loadGoSSZState(dat)
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	res := byte(0)
+	for i := 0; i < b.N; i++ {
+		out, err := gossz.Marshal(state)
+		if err != nil {
+			b.Fatal(err)
+		}
+		res += out[0]
+	}
+	b.Logf("res: %d, N: %d", res, b.N)
+}
 
 
 func BenchmarkZsszstructGobSerialize(b *testing.B) {
@@ -417,21 +414,21 @@ func BenchmarkFastsszDeserialize(b *testing.B) {
 	b.Logf("res: %d, N: %d", res, b.N)
 }
 
-//func BenchmarkGosszDeserialize(b *testing.B) {
-//	dat := loadStateBytes()
-//	var state pbp2p.BeaconState
-//	b.ReportAllocs()
-//	b.ResetTimer()
-//	res := uint64(0)
-//	for i := 0; i < b.N; i++ {
-//		err := gossz.Unmarshal(dat, &state)
-//		if err != nil {
-//			b.Fatal(err)
-//		}
-//		res += state.GenesisTime
-//	}
-//	b.Logf("res: %d, N: %d", res, b.N)
-//}
+func BenchmarkGosszDeserialize(b *testing.B) {
+	dat := loadStateBytes()
+	var state pbp2p.BeaconState
+	b.ReportAllocs()
+	b.ResetTimer()
+	res := uint64(0)
+	for i := 0; i < b.N; i++ {
+		err := gossz.Unmarshal(dat, &state)
+		if err != nil {
+			b.Fatal(err)
+		}
+		res += state.GenesisTime
+	}
+	b.Logf("res: %d, N: %d", res, b.N)
+}
 
 func BenchmarkZsszstructGobDeserialize(b *testing.B) {
 	dat := loadStateBytes()
