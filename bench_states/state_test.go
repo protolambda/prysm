@@ -57,7 +57,7 @@ type MockBeaconState struct {
 }
 
 // Go-ssz uses fast-ssz for whitelisted types. Instead, make go-ssz do its own thing, by wrapping the type
-type GosszState *pbp2p.BeaconState
+type GosszState pbp2p.BeaconState
 
 
 //------------------------
@@ -98,8 +98,8 @@ func loadPrysmProtobufState(dat []byte) (*pbp2p.BeaconState, error) {
 	return &st, err
 }
 
-func loadGoSSZState(dat []byte) (GosszState, error) {
-	var st pbp2p.BeaconState
+func loadGoSSZState(dat []byte) (*GosszState, error) {
+	var st GosszState
 	err := gossz.Unmarshal(dat, &st)
 	return &st, err
 }
@@ -117,7 +117,7 @@ func loadGoSSZState(dat []byte) (GosszState, error) {
 //		root := stateTree.HashTreeRoot(hFn)
 //		res += root[0]
 //	}
-//	b.Logf("res: %d, N: %d", res, b.N)
+//	//b.Logf("res: %d, N: %d", res, b.N)
 //}
 
 func BenchmarkZsszHTR(b *testing.B) {
@@ -133,7 +133,7 @@ func BenchmarkZsszHTR(b *testing.B) {
 		root := zssz.HashTreeRoot(m, state, beacon.BeaconStateSSZ)
 		res += root[0]
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 //func BenchmarkPrysmHTR(b *testing.B) {
@@ -156,7 +156,7 @@ func BenchmarkZsszHTR(b *testing.B) {
 //		}
 //		res += root[0]
 //	}
-//	b.Logf("res: %d, N: %d", res, b.N)
+//	//b.Logf("res: %d, N: %d", res, b.N)
 //}
 
 func BenchmarkGosszHTR(b *testing.B) {
@@ -174,7 +174,7 @@ func BenchmarkGosszHTR(b *testing.B) {
 		}
 		res += root[0]
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 func BenchmarkZtypSerialize(b *testing.B) {
@@ -196,7 +196,7 @@ func BenchmarkZtypSerialize(b *testing.B) {
 		res += buf.Bytes()[0]
 		buf.Reset()
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 type PreAllocatedWriter struct {
@@ -227,7 +227,7 @@ func BenchmarkZsszSerialize(b *testing.B) {
 		res += w.Out[0]
 		w.N = 0
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 func BenchmarkMockZsszSerialize(b *testing.B) {
@@ -249,7 +249,7 @@ func BenchmarkMockZsszSerialize(b *testing.B) {
 		res += w.Out[0]
 		w.N = 0
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 func BenchmarkFastsszSerialize(b *testing.B) {
@@ -272,7 +272,7 @@ func BenchmarkFastsszSerialize(b *testing.B) {
 		res += buf[0]
 		buf = buf[:0]
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 func BenchmarkGosszSerialize(b *testing.B) {
@@ -291,7 +291,7 @@ func BenchmarkGosszSerialize(b *testing.B) {
 		}
 		res += out[0]
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 
@@ -315,7 +315,7 @@ func BenchmarkZsszstructGobSerialize(b *testing.B) {
 		res += buf.Bytes()[0]
 		buf.Reset()
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 func BenchmarkProtobufstructGobSerialize(b *testing.B) {
@@ -338,7 +338,7 @@ func BenchmarkProtobufstructGobSerialize(b *testing.B) {
 		res += buf.Bytes()[0]
 		buf.Reset()
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 func BenchmarkProtobufSerialize(b *testing.B) {
@@ -359,7 +359,7 @@ func BenchmarkProtobufSerialize(b *testing.B) {
 		}
 		res += buf[0]
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 //------------
 
@@ -381,7 +381,7 @@ func BenchmarkZtypDeserialize(b *testing.B) {
 		res += uint64(g)
 		r.Reset(dat)
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 func BenchmarkZsszDeserialize(b *testing.B) {
@@ -399,7 +399,7 @@ func BenchmarkZsszDeserialize(b *testing.B) {
 		res += uint64(state.GenesisTime)
 		r.Reset(dat)
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 func BenchmarkFastsszDeserialize(b *testing.B) {
@@ -415,12 +415,12 @@ func BenchmarkFastsszDeserialize(b *testing.B) {
 		}
 		res += state.GenesisTime
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 func BenchmarkGosszDeserialize(b *testing.B) {
 	dat := loadStateBytes()
-	var state pbp2p.BeaconState
+	var state GosszState
 	b.ReportAllocs()
 	b.ResetTimer()
 	res := uint64(0)
@@ -431,7 +431,7 @@ func BenchmarkGosszDeserialize(b *testing.B) {
 		}
 		res += state.GenesisTime
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 func BenchmarkZsszstructGobDeserialize(b *testing.B) {
@@ -460,7 +460,7 @@ func BenchmarkZsszstructGobDeserialize(b *testing.B) {
 		res += uint64(state.GenesisTime)
 		r.Reset(buf.Bytes())
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 func BenchmarkProtobufstructGobDeserialize(b *testing.B) {
@@ -489,7 +489,7 @@ func BenchmarkProtobufstructGobDeserialize(b *testing.B) {
 		res += state.GenesisTime
 		r.Reset(buf.Bytes())
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
 
 func BenchmarkProtobufDeserialize(b *testing.B) {
@@ -515,5 +515,5 @@ func BenchmarkProtobufDeserialize(b *testing.B) {
 		}
 		res += state.GenesisTime
 	}
-	b.Logf("res: %d, N: %d", res, b.N)
+	//b.Logf("res: %d, N: %d", res, b.N)
 }
